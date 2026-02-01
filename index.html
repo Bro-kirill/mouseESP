@@ -21,20 +21,21 @@
 
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 <script>
-const broker = "wss://broker.hivemq.com:8000/mqtt"; // HiveMQ public broker
-const topic = "esp32/led/cmd";
-
-const clientId = "ESP32WebClient-" + Math.floor(Math.random()*10000);
-const client = mqtt.connect(broker, { clientId });
-
 const statusDiv = document.getElementById("status");
 
+const broker = "wss://broker.hivemq.com:8000/mqtt"; // HiveMQ public WebSocket
+const topic = "esp32/led/cmd";
+const clientId = "ESP32WebClient-" + Math.floor(Math.random()*10000);
+
+const client = mqtt.connect(broker, { clientId, keepalive: 60, clean: true });
+
 client.on('connect', () => {
-  statusDiv.textContent = "Status: Connected";
+  statusDiv.textContent = "Status: Connected!";
 });
 
 client.on('error', (err) => {
-  statusDiv.textContent = "Status: Error - " + err;
+  statusDiv.textContent = "Status: Connection Error";
+  console.log(err);
 });
 
 // Publish ON
