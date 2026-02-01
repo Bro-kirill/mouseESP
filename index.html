@@ -1,45 +1,50 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Virtual Touchpad</title>
+<title>ESP32 LED Controller</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-  body { margin:0; height:100vh; display:flex; justify-content:center; align-items:center; background:#111; color:#eee; }
-  #pad { width:90vw; height:90vh; background:#222; touch-action:none; }
+  body { font-family:sans-serif; display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; background:#111; color:#eee; }
+  button { font-size:2rem; padding:1rem 2rem; margin:1rem; border:none; border-radius:10px; cursor:pointer; }
+  #onBtn { background: #0f0; color:#000; }
+  #offBtn { background: #f00; color:#fff; }
+  #status { margin-top:2rem; font-size:1.2rem; }
 </style>
 </head>
 <body>
-<div id="pad"></div>
+
+<h1>ESP32 LED Control</h1>
+<button id="onBtn">ON</button>
+<button id="offBtn">OFF</button>
+<div id="status">Status: Disconnected</div>
 
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 <script>
-const broker = "wss://broker.hivemq.com:8000/mqtt"; // WebSocket MQTT
-const topic = "ipad/mouse/coords";
+const broker = "wss://broker.hivemq.com:8000/mqtt"; // HiveMQ public broker
+const topic = "esp32/led/cmd";
 
-const client = mqtt.connect(broker);
+const clientId = "ESP32WebClient-" + Math.floor(Math.random()*10000);
+const client = mqtt.connect(broker, { clientId });
 
-client.on('connect', () => { console.log("Connected to MQTT broker!"); });
+const statusDiv = document.getElementById("status");
 
-let lastX = 0;
-let lastY = 0;
-
-const pad = document.getElementById("pad");
-pad.addEventListener("touchstart", e => {
-  lastX = e.touches[0].clientX;
-  lastY = e.touches[0].clientY;
+client.on('connect', () => {
+  statusDiv.textContent = "Status: Connected";
 });
-pad.addEventListener("touchmove", e => {
-  e.preventDefault();
-  const x = e.touches[0].clientX;
-  const y = e.touches[0].clientY;
-  
-  const dx = x - lastX;
-  const dy = y - lastY;
 
-  client.publish(topic, dx + "," + dy);
+client.on('error', (err) => {
+  statusDiv.textContent = "Status: Error - " + err;
+});
 
-  lastX = x;
-  lastY = y;
+// Publish ON
+document.getElementById("onBtn").addEventListener("click", () => {
+  client.publish(topic, "ON");
+});
+
+// Publish OFF
+document.getElementById("offBtn").addEventListener("click", () => {
+  client.publish(topic, "OFF");
 });
 </script>
 </body>
